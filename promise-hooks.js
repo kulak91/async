@@ -10,8 +10,8 @@ module.exports = hooks.createHook({
   },
   init (asyncId, type, triggerAsyncId, resource) {
     const eid = hooks.executionAsyncId()
-    const indentStr = ' '.repeat(indent)
-    fs.writeSync(1, `${indentStr}${type}(${asyncId}), trigger: ${triggerAsyncId}, resource: ${resource.parentId}, execution: ${eid}\n`)
+    const indentStr = ' '.repeat(indent);
+    fs.writeSync(1, `${indentStr}Init: ${type}(${asyncId}), trigger: ${triggerAsyncId}, resource: ${resource}, execution: ${eid}\n`)
   },
   before (asyncId) {
     const indentStr = ' '.repeat(indent)
