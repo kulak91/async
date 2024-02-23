@@ -15,7 +15,7 @@ hooks.enable();
 
 function asyncFn (){
     return  new Promise((resolve, reject) => {
-    reject('Hi')
+      resolve('Hello from A');
     })
 }
 
