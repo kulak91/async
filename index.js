@@ -15,7 +15,11 @@ hooks.enable();
 
 function asyncFn (){
     return  new Promise((resolve, reject) => {
+<<<<<<< HEAD
       reject('Error from B');
+=======
+      resolve('Hello from A');
+>>>>>>> main
     })
 }
 
