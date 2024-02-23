@@ -57,14 +57,11 @@ const fetchOpenPRsStatusWithRetry = async (owner, repo, authToken) => {
               draft: prDetails.draft,
           });
       }
-  } catch (error) {
-      console.error(error);
-  }
+
 
   for (const pr of pullRequests) {
       if (pr.draft) continue; // Skip drafts
 
-      try {
           const prDetails = await fetchPRDetailsWithRetry(pr.url, { headers }, 3, 3000);
           console.log({
               number: pr.number,
@@ -74,10 +71,11 @@ const fetchOpenPRsStatusWithRetry = async (owner, repo, authToken) => {
               merged: prDetails.merged,
               draft: prDetails.draft,
           });
-      } catch (error) {
-          console.error(`Failed to fetch mergeable status for PR #${pr.number}: ${error.message}`);
-      }
+
   }
+} catch (error) {
+  console.error(`Failed to fetch mergeable status for PR #${pr.number}: ${error.message}`);
+}
 
   console.log('Fetch completed.');
 };
