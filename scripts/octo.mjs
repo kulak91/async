@@ -49,4 +49,5 @@ const managePRLabels = async (owner, repo) => {
     }
   }
 };
+
 managePRLabels(owner, repo).catch(console.error);
