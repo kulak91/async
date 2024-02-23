@@ -19,6 +19,9 @@ jobs:
         with:
           node-version: '18' # Specify the Node.js version
 
+      - name: Install deps
+        run: npm i
+
       # Run your script using the GITHUB_TOKEN for authentication
       - name: Run script to fetch PR status
         run: node fetch.js
