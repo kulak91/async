@@ -5,7 +5,7 @@ const owner = 'kulak91';
 const repo = 'async';
 const octokit = new Octokit({
   auth: API_TOKEN
-})
+});
 
 const LABEL_NAME = 'merge conflicts';
 
@@ -49,4 +49,5 @@ const managePRLabels = async (owner, repo) => {
     }
   }
 };
+
 managePRLabels(owner, repo).catch(console.error);
