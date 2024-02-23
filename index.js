@@ -6,14 +6,13 @@ const COLOR = {
   GREEN: "\x1b[32m",
   RED: "\x1b[31m",
 };
-const a = 'a';
 
 const errMsg = (...args) => `${COLOR.RED}${args.join(" ")}${COLOR.RESET}`;
 const succMsg = (...args) => `${COLOR.GREEN}${args.join(" ")}${COLOR.RESET}`;
 
 hooks.enable();
 const b = 'a';
-
+const a = 'b';
 function asyncFn (){
     return  new Promise((resolve, reject) => {
       resolve('Hello from A');
