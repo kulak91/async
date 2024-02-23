@@ -87,6 +87,6 @@ const owner = 'kulak91';
 const repo = 'async';
 const authToken = process.env.GITHUB_TOKEN;
 
-fetchOpenPRsStatus(owner, repo, authToken)
+fetchOpenPRsStatusWithRetry(owner, repo, authToken)
     .then(() => console.log('fetch conpleted'))
     .catch(error => console.error('Failed to fetch PRs status:', error));
