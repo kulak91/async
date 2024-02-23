@@ -21,7 +21,45 @@ async function fetchPRDetailsWithRetry(url, headers, retries = 3, delay = 3000) 
 }
 
 const fetchOpenPRsStatusWithRetry = async (owner, repo, authToken) => {
-  // Rest of your function as before...
+  const baseUrl = `https://api.github.com/repos/${owner}/${repo}/pulls`;
+  const params = new URLSearchParams({ state: 'open' }); // Fetch only open PRs
+  const headers = {
+      'Authorization': `Bearer ${authToken}`,
+      'Accept': 'application/vnd.github.v3+json',
+  };
+
+  try {
+      const response = await fetch(`${baseUrl}?${params.toString()}`, { headers });
+      if (!response.ok) {
+          throw new Error(`Error fetching PRs: ${response.statusText}`);
+      }
+
+      const pullRequests = await response.json();
+      for (const pr of pullRequests) {
+          if (pr.draft) {
+              // Skip draft PRs if you only want non-draft open PRs
+              continue;
+          }
+          // Fetch additional details for each PR, including the `mergeable` status
+          const prDetailsResponse = await fetch(pr.url, { headers });
+          if (!prDetailsResponse.ok) {
+              throw new Error(`Error fetching PR details: ${prDetailsResponse.statusText}`);
+          }
+          const prDetails = await prDetailsResponse.json();
+
+          // Print out PR details, including the `mergeable` status
+          console.log({
+              number: pr.number,
+              title: pr.title,
+              state: pr.state,
+              mergeable: prDetails.mergeable,
+              merged: prDetails.merged,
+              draft: prDetails.draft,
+          });
+      }
+  } catch (error) {
+      console.error(error);
+  }
 
   for (const pr of pullRequests) {
       if (pr.draft) continue; // Skip drafts
