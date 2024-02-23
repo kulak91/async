@@ -1,4 +1,4 @@
-const fetch = require('node-fetch'); // Ensure you have node-fetch installed if running in Node.js
+const fetch = require('node-fetch2');
 
 const fetchPRsStatus = async (owner, repo, authToken) => {
     const url = `https://api.github.com/repos/${owner}/${repo}/pulls?state=all`;
