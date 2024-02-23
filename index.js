@@ -12,6 +12,7 @@ const errMsg = (...args) => `${COLOR.RED}${args.join(" ")}${COLOR.RESET}`;
 const succMsg = (...args) => `${COLOR.GREEN}${args.join(" ")}${COLOR.RESET}`;
 
 hooks.enable();
+const b = 'a';
 
 function asyncFn (){
     return  new Promise((resolve, reject) => {
