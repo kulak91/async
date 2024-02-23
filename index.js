@@ -12,6 +12,8 @@ const succMsg = (...args) => `${COLOR.GREEN}${args.join(" ")}${COLOR.RESET}`;
 
 hooks.enable();
 
+const a = '242';
+
 function asyncFn (){
     return  new Promise((resolve, reject) => {
     reject('Hi')
