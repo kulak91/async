@@ -17,7 +17,23 @@ const fetchPRsStatus = async (owner, repo, authToken) => {
 
         const pullRequests = await response.json();
 
-        return pullRequests;
+        for (const pr of pullRequests) {
+          // Fetch additional details for each PR, including the `mergeable` status
+          const prDetailsResponse = await fetch(pr.url, { headers });
+          if (!prDetailsResponse.ok) {
+              throw new Error(`Error fetching PR details: ${prDetailsResponse.statusText}`);
+          }
+          const prDetails = await prDetailsResponse.json();
+
+          // Print out PR details including the `mergeable` status
+          console.log({
+              number: pr.number,
+              title: pr.title,
+              state: pr.state,
+              mergeable: prDetails.mergeable,
+              merged: prDetails.merged,
+          });
+      }
     } catch (error) {
         console.error(error);
         return [];
@@ -29,5 +45,5 @@ const repo = 'async';
 const authToken = process.env.GITHUB_TOKEN;
 
 fetchPRsStatus(owner, repo, authToken)
-    .then(prsStatus => console.log(prsStatus))
+    .then(() => console.log('fetch conpleted'))
     .catch(error => console.error('Failed to fetch PRs status:', error));
