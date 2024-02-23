@@ -1,10 +1,9 @@
 import { Octokit, App } from "octokit";
 
-const API_TOKEN = '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';
 const owner = 'kulak91';
 const repo = 'async';
 const octokit = new Octokit({
-  auth: API_TOKEN
+  auth: process.env.GITHUB_TOKEN
 })
 
 const LABEL_NAME = 'merge conflicts';
