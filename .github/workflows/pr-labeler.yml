@@ -1,0 +1,31 @@
+name: "Pull Request Labeler"
+
+on:
+  pull_request_target:
+
+jobs:
+  manage-labels:
+    permissions:
+      contents: read
+      pull-requests: write
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        # Fetches the entire commit history so scripts that require it can function properly.
+        fetch-depth: 0
+
+    # Set up Node.js environment to run your script
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16' # Specify the Node.js version you want to use
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Manage PR Labels
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: node ./scripts/octo.mjs
