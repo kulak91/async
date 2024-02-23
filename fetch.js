@@ -17,13 +17,7 @@ const fetchPRsStatus = async (owner, repo, authToken) => {
 
         const pullRequests = await response.json();
 
-        return pullRequests.map(pr => ({
-            number: pr.number,
-            title: pr.title,
-            state: pr.state,
-            mergeable: pr.mergeable, // Note: mergeable might be null if GitHub hasn't computed it yet
-            merged: pr.merged,
-        }));
+        return pullRequests;
     } catch (error) {
         console.error(error);
         return [];
