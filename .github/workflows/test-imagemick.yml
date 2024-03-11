@@ -1,0 +1,89 @@
+name: Test imagemick
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-ios:
+    name: Build iOS
+    # if: ${{ github.event.pull_request.merged }}
+    runs-on: macos-13
+    environment:
+      # name: ${{ github.ref_name }}
+        name: dev
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Install NodeJS
+        uses: actions/setup-node@v3
+        # with:
+          # node-version-file: .nvmrc
+
+      - name: Install Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.3
+          bundler-cache: true
+
+      # - name: Cache NPM Dependencies
+      #   id: npm-cache
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: |
+      #       **/node_modules
+      #     key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-npm-
+
+      # - name: Setup Pods Cache
+      #   id: pods-cache
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: Pods
+      #     key: ${{ runner.os }}-pods-${{ hashFiles('ios/Podfile.lock') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-pods-
+
+      # - name: Install NPM Dependencies
+      #   if: steps.npm-cache.outputs.cache-hit != 'true'
+      #   run: npm install
+
+      # - name: Install CocoaPods Dependencies
+      #   if: steps.pods-cache.outputs.cache-hit != 'true'
+      #   env:
+      #     CI: true
+      #   run: |
+      #     cd ios
+      #     pod install --repo-update
+
+      # - name: Setup ENV files
+      #   env:
+      #     ENVIRONMENT_NAME: ${{ secrets.ENVIRONMENT_NAME }}
+      #   run: |
+      #     echo ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }} | base64 --decode > ./ios/fastlane/AppStoreApiKey.json
+      #     echo 'ENV="${{ secrets.ENV }}"' > .env.$ENVIRONMENT_NAME
+      #     echo 'EVERBEAT_BASE_URL="${{ secrets.EVERBEAT_BASE_URL }}"' >> .env.$ENVIRONMENT_NAME
+      #     echo 'AUTH0_DOMAIN="${{ secrets.AUTH0_DOMAIN }}"' >> .env.$ENVIRONMENT_NAME
+      #     echo 'AUTH0_CLIENT_ID="${{ secrets.AUTH0_CLIENT_ID }}"' >> .env.$ENVIRONMENT_NAME
+      #     echo 'ENCRYPTION_KEY="${{ secrets.ENCRYPTION_KEY }}"' >> .env.$ENVIRONMENT_NAME
+      #     echo 'WEB_APP="${{ secrets.WEB_APP }}"' >> .env.$ENVIRONMENT_NAME
+      #     echo 'PULSE_AI_API_KEY="${{ secrets.PULSE_AI_API_KEY }}"' >> .env.$ENVIRONMENT_NAME
+
+      - name: Install Fastlane
+        run: |
+          bundle install
+          bundle update
+
+      - name: Install ImageMagick
+        uses: mfinelli/setup-imagemagick@v5
+
+      - name: Test imagemick
+        run: |
+          cd ios
+          bundle exec fastlane ios custom_lane
+        env:
+          CI: true
