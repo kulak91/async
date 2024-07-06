@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+      - dev
+      - test
 
 jobs:
   build-ios:
@@ -79,7 +81,7 @@ jobs:
           bundle update
 
       - name: Install ImageMagick
-        uses: mfinelli/setup-imagemagick@v5
+        uses: brew install imagemagick
 
       - name: Test imagemick
         run: |

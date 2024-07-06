@@ -1,0 +1,17 @@
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        description: Build environment to use
+        options:
+          - dev
+          - prod
+jobs:
+  log-the-inputs:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "Environment: $ENVIRONMENT"
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
