@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node index.js"
   },
-  "author": "Dmytro",
+  "author": "Dmytro K",
   "license": "ISC",
   "dependencies": {
     "node-fetch": "3.3.2",

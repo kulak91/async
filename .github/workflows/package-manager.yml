@@ -26,7 +26,7 @@ jobs:
         uses: tj-actions/changed-files@v45
         id: get-diff
         with:
-          file: |
+          files: |
             package.json
             yarn.lock
             package-lock.json
