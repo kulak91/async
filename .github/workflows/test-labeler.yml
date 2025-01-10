@@ -4,7 +4,7 @@ on:
     pull_request:
     push:
       branches:
-        - main
+        - never
 
 jobs:
   scan-pull-request-status:
