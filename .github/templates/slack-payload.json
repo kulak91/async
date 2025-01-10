@@ -4,7 +4,7 @@
         "type": "header",
         "text": {
           "type": "plain_text",
-          "text": "Project: ${{ env.REPO_NAME }}"
+          "text": "Project: {{ env.REPO_NAME }}"
         }
     },
     {
@@ -20,7 +20,7 @@
     {
       "type": "section",
       "text": {
-        "text": "*Files changed:* ${{ env.FILES_CHANGED }}",
+        "text": "*Files changed:* {{ env.FILES_CHANGED }}",
         "type": "mrkdwn"
       }
     },
@@ -38,7 +38,7 @@
             "text": "Update Document"
           },
           "style": "primary",
-          "url": "${{ env.DOCUMENTS_URL }}"
+          "url": "{{ env.DOCUMENTS_URL }}"
         },
         {
           "type": "button",
@@ -46,7 +46,7 @@
             "type": "plain_text",
             "text": "View Changes"
           },
-          "url": "${{ env.COMMIT_URL }}"
+          "url": "{{ env.COMMIT_URL }}"
         }
       ]
     }
