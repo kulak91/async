@@ -1,12 +1,22 @@
 name: Test imagemick
 
 on:
-  push:
-    branches:
-      # - main
-      # - dev
-      # - test
-      - never
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'dev'
+        # options:
+        #   - dev
+        #   - test
+        #   - prod
+#   push:
+#     branches:
+#       # - main
+#       # - dev
+#       # - test
+#       - never
 
 jobs:
   build-ios:

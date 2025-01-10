@@ -21,6 +21,11 @@ jobs:
         id: checkout
         uses: actions/checkout@v4
 
+      - name: Current path
+        run: pwd
+      - name: List files
+        run: ls -la
+
       - name: Get Diff
         uses: tj-actions/changed-files@v45
         id: get-diff
