@@ -45,6 +45,7 @@ jobs:
                     "text": "${{ github.repository }}"
                   }
                 }
+              },
               {
                 "type": "section",
                 "text": {
