@@ -35,7 +35,7 @@
           "type": "button",
           "text": {
             "type": "plain_text",
-            "text": "Update Documents"
+            "text": "Update Document"
           },
           "style": "primary",
           "url": "${{ env.DOCUMENTS_URL }}"
