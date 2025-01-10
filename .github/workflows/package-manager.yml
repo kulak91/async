@@ -33,7 +33,9 @@ jobs:
 
 
       - name: Output
-        if: ${{ steps.get-diff.outputs.all_changed_files }}
+        if: steps.get-diff.outputs.any_changed == 'true'
+        env:
+          ALL_CHANGED_FILES: ${{ steps.get-diff.outputs.all_changed_files }}
         run: |
           for file in ${ALL_CHANGED_FILES}; do
             echo "$file was changed"
