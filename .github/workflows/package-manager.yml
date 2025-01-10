@@ -39,9 +39,16 @@ jobs:
             {
             "blocks": [
               {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "${{ github.repository }}"
+                  }
+                }
+              {
                 "type": "section",
                 "text": {
-                  "text": "🚨 Dependency changes detected in the **${{ github.repository }}** repository!\n
+                  "text": "🚨 Dependency changes detected.\n
                   Please review the changes and update Software Bill Of Materials if necessary.",
                   "type": "mrkdwn"
                 }
