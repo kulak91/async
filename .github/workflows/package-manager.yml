@@ -1,6 +1,5 @@
 name: Check Dependencies Changes
 
-# Install => Diff (env.PACKAGE_FILE) => Pick slack with output
 on:
   pull_request:
     branches:
@@ -28,27 +27,7 @@ jobs:
         with:
           files: |
             package.json
-            yarn.lock
             package-lock.json
-        #   files: |
-            # ${{ vars.PACKAGE_MANAGER_FILES }}
-
-
-
-
-      - name: Output
-        if: steps.get-diff.outputs.any_changed == 'true'
-        env:
-          ALL_CHANGED_FILES: ${{ steps.get-diff.outputs.all_changed_files }}
-        run: |
-          for file in ${ALL_CHANGED_FILES}; do
-            echo "$file was changed"
-            echo "Diff is:"
-            git diff --ignore-space-at-eol --text $file
-            echo "Diff 2 is:"
-            git diff --ignore-space-at-eol --text HEAD~1 $file
-          done
-
 
       - name: Send Slack Notification
         if: steps.get-diff.outputs.any_changed == 'true'
@@ -63,7 +42,7 @@ jobs:
                 "type": "section",
                 "text": {
                   "text": "🚨 Dependency changes detected in the **${{ github.repository }}** repository!\n
-                  Please review the changes and update dependencies documents.",
+                  Please review the changes and update Software Bill Of Materials if necessary.",
                   "type": "mrkdwn"
                 }
               },
@@ -73,8 +52,7 @@ jobs:
               {
                 "type": "section",
                 "text": {
-                  "text": "*Files changed:* ${{ steps.get-diff.outputs.all_changed_files }}\n
-                  *Please review the changes:* ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}",
+                  "text": "*Files changed:* ${{ steps.get-diff.outputs.all_changed_files }}",
                   "type": "mrkdwn"
                 }
               },
@@ -89,16 +67,16 @@ jobs:
                     "type": "button",
                     "text": {
                       "type": "plain_text",
-                      "text": "View Changes"
+                      "text": "Update Documents"
                     },
                     "style": "primary",
-                    "value": "click_me_456"
+                    "url": "${{ secrets.DOCUMENTS_URL }}"
                   },
                   {
                     "type": "button",
                     "text": {
                       "type": "plain_text",
-                      "text": "Update Documents"
+                      "text": "View Changes"
                     },
                     "url": "${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
                   }
@@ -106,17 +84,3 @@ jobs:
               }
             ]
             }
-
-
-
-
-
-          # {
-          #   "text": "🚨 Dependency changes detected in the repository!",
-          #   "attachments": [
-          #     {
-          #       "text": "Files changed: ${{ steps.get-diff.outputs.all_changed_files }}\n
-          #       Please review the changes: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
-          #     }
-          #   ]
-          # }
