@@ -1,0 +1,54 @@
+{
+  "blocks": [
+    {
+        "type": "header",
+        "text": {
+          "type": "plain_text",
+          "text": "${{ env.REPO_NAME }}"
+        }
+    },
+    {
+      "type": "section",
+      "text": {
+        "text": "🚨 Dependency changes detected.\nPlease review the changes and update Software Bill Of Materials if necessary.",
+        "type": "mrkdwn"
+      }
+    },
+        {
+      "type": "divider"
+    },
+    {
+      "type": "section",
+      "text": {
+        "text": "*Files changed:* ${{ env.FILES_CHANGED }}",
+        "type": "mrkdwn"
+      }
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "actions",
+      "block_id": "actionblock789",
+      "elements": [
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "Update Documents"
+          },
+          "style": "primary",
+          "url": "${{ env.DOCUMENTS_URL }}"
+        },
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "View Changes"
+          },
+          "url": "${{ env.COMMIT_URL }}"
+        }
+      ]
+    }
+  ]
+  }
