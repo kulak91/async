@@ -25,7 +25,11 @@ jobs:
       - name: Get Diff
         uses: tj-actions/changed-files@v45
         id: get-diff
-        # with:
+        with:
+          file: |
+            package.json
+            yarn.lock
+            package-lock.json
         #   files: |
             # ${{ vars.PACKAGE_MANAGER_FILES }}
 
@@ -39,33 +43,8 @@ jobs:
         run: |
           for file in ${ALL_CHANGED_FILES}; do
             echo "$file was changed"
+            echo "Diff is:"
             git diff --ignore-space-at-eol --text $file
+            echo "Diff 2 is:"
+            git diff --ignore-space-at-eol --text HEAD~1 $file
           done
-        # run:  env.GIT_DIFF && !env.MATCHED_FILES
-
-
-      # # This will fail the workflow if the `dist/` directory is different than
-      # # expected.
-      # - name: Compare Directories
-      #   id: diff
-      #   run: |
-      #     if [ ! -d dist/ ]; then
-      #       echo "Expected dist/ directory does not exist.  See status below:"
-      #       ls -la ./
-      #       exit 1
-      #     fi
-      #     if [ "$(git diff --ignore-space-at-eol --text dist/ | wc -l)" -gt "0" ]; then
-      #       echo "Detected uncommitted changes after build. See status below:"
-      #       git diff --ignore-space-at-eol --text dist/
-      #       exit 1
-      #     fi
-
-      # # If `dist/` was different than expected, upload the expected version as a
-      # # workflow artifact.
-      # - if: ${{ failure() && steps.diff.outcome == 'failure' }}
-      #   name: Upload Artifact
-      #   id: upload
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: dist
-      #     path: dist/
