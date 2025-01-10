@@ -1,6 +1,9 @@
 name: Check Dependencies Changes
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
@@ -20,6 +23,8 @@ jobs:
 
       - name: Current path
         run: pwd
+      - name: List files
+        run: ls -la
 
       - name: Get Diff
         uses: tj-actions/changed-files@v45
