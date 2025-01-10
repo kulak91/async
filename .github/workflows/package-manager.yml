@@ -52,13 +52,14 @@ jobs:
 
       - name: Send Slack Notification
         if: steps.get-diff.outputs.any_changed == 'true'
-        uses: slackapi/slack-github-action@v1.25.0
+        uses: slackapi/slack-github-action@v2.0.0
         with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: webhook-trigger
           slack-message: >
             🚨 Dependency changes detected in the repository!
             Files changed:
             ${{ steps.get-diff.outputs.all_changed_files }}
             Please review the changes: ${{ github.event.pull_request.html_url || github.server_url }}/commit/${{ github.sha }}
           # channel-id: YOUR_CHANNEL_ID
-          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           # slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
