@@ -43,68 +43,7 @@ jobs:
           payload-file-path: ./.github/templates/slack-payload.json
           payload-templated: true
         env:
-          REPO_NAME: ${{ github.repository }}
+          REPO_NAME: ${{ github.event.repository.name }}
           FILES_CHANGED: ${{ steps.get-diff.outputs.all_changed_files }}
           DOCUMENTS_URL: ${{ secrets.DOCUMENTS_URL }}
           COMMIT_URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}
-
-
-
-
-
-          # payload: >
-          #   {
-          #   "blocks": [
-          #     {
-          #         "type": "header",
-          #         "text": {
-          #           "type": "plain_text",
-          #           "text": "${{ github.repository }}"
-          #         }
-          #     },
-          #     {
-          #       "type": "section",
-          #       "text": {
-          #         "text": "🚨 Dependency changes detected.\n
-          #         Please review the changes and update Software Bill Of Materials if necessary.",
-          #         "type": "mrkdwn"
-          #       }
-          #     },
-          #     		{
-          #       "type": "divider"
-          #     },
-          #     {
-          #       "type": "section",
-          #       "text": {
-          #         "text": "*Files changed:* ${{ steps.get-diff.outputs.all_changed_files }}",
-          #         "type": "mrkdwn"
-          #       }
-          #     },
-          #     {
-          #       "type": "divider"
-          #     },
-          #     {
-          #       "type": "actions",
-          #       "block_id": "actionblock789",
-          #       "elements": [
-          #         {
-          #           "type": "button",
-          #           "text": {
-          #             "type": "plain_text",
-          #             "text": "Update Documents"
-          #           },
-          #           "style": "primary",
-          #           "url": "${{ secrets.DOCUMENTS_URL }}"
-          #         },
-          #         {
-          #           "type": "button",
-          #           "text": {
-          #             "type": "plain_text",
-          #             "text": "View Changes"
-          #           },
-          #           "url": "${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
-          #         }
-          #       ]
-          #     }
-          #   ]
-          #   }
