@@ -10,7 +10,7 @@
     {
       "type": "section",
       "text": {
-        "text": "🚨 Dependency changes detected.\nPlease review the changes and update Software Bill Of Materials if necessary.",
+        "text": ":robot_face: Dependency changes detected.\nPlease review the changes and update Software Bill Of Materials if necessary.",
         "type": "mrkdwn"
       }
     },
