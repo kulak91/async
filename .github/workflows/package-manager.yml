@@ -27,12 +27,15 @@ jobs:
         run: ls -la
 
       - name: Get Diff
+
         uses: tj-actions/changed-files@v45
+
         id: get-diff
-        # with:
-        #   files: |
-        #     package.json
-        #     package-lock.json
+        with:
+          files: |
+            package.json
+            requirements.txt
+            requiremenets-dev.txt
 
       - name: Send Slack Notification
         if: steps.get-diff.outputs.any_changed == 'true'
