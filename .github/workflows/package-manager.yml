@@ -33,9 +33,9 @@ jobs:
         id: get-diff
         with:
           files: |
-            package.json
-            requirements.txt
-            requiremenets-dev.txt
+            ./infra/package.json
+            ./backend/requirements.txt
+            ./backend/requiremenets-dev.txt
 
       - name: Send Slack Notification
         if: steps.get-diff.outputs.any_changed == 'true'
