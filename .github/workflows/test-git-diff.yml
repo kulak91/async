@@ -23,7 +23,11 @@ jobs:
           BEFORE_REF: ${{ github.event.before }}
           AFTER_REF: ${{ github.event.after }}
         run: |
-          git log --pretty=format:%s "$BEFORE_REF..$AFTER_REF" > commit_message.txt
+          echo "BEFORE_REF=$BEFORE_REF"
+          echo "AFTER_REF=$AFTER_REF"
+
+          echo "Commit messages:"
           git log --pretty=format:"%h %s" "$BEFORE_REF..$AFTER_REF"
-          git diff --name-only "$BEFORE_REF..$AFTER_REF" > changed_files.txt
+
+          echo "Changed files:"
           git diff --name-only "$BEFORE_REF..$AFTER_REF"
