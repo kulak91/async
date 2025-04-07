@@ -27,7 +27,4 @@ jobs:
           echo "AFTER_REF=$AFTER_REF"
 
           echo "Commit messages:"
-          git log --pretty=format:"%h %s" "$BEFORE_REF..$AFTER_REF"
-
-          echo "Changed files:"
-          git diff --name-only "$BEFORE_REF..$AFTER_REF"
+          git log --pretty=format:"%s" "$BEFORE_REF..$AFTER_REF"
