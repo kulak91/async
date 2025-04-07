@@ -18,23 +18,24 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Download last successful SHA from S3
+      - name: Download previous BEFORE_REF from S3 (if any)
         run: |
-          aws s3 cp s3://everbeat-github/changelog/last_successful_sha.txt last_successful_sha.txt || true
+          aws s3 cp s3://everbeat-github/changelog/${{ github.ref }}/last_failed_before_ref.txt last_failed_before_ref.txt || true
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_S3_ACCESS_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_S3_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: your-region
-
-      - name: Calculate Changelog
+      - name: Get Commit Messages
+        env:
+          BEFORE_REF: ${{ github.event.before }}
+          AFTER_REF: ${{ github.event.after }}
         run: |
-          LAST_SHA=$(cat last_successful_sha.txt 2>/dev/null || git rev-list --max-parents=0 HEAD)
-          echo "LAST SUCCESSFUL SHA: $LAST_SHA"
-          echo "CURRENT COMMIT: ${{ github.sha }}"
+          REAL_BEFORE=$(cat last_failed_before_ref.txt 2>/dev/null || echo "$BEFORE_REF")
 
-          LOG=$(git log --pretty=format:"%s" $LAST_SHA..${{ github.sha }})
-          echo -e "\n📝 CHANGELOG:\n$LOG"
+          echo "BEFORE: $REAL_BEFORE"
+          echo "AFTER: $AFTER_REF"
+
+          LOG=$(git log --pretty=format:"%s" "$REAL_BEFORE..$AFTER_REF")
 
           echo 'CHANGELOG<<EOF' >> $GITHUB_ENV
           echo "$LOG" >> $GITHUB_ENV
@@ -46,11 +47,11 @@ jobs:
         env:
           CHANGELOG: ${{ env.CHANGELOG }}
 
-      - name: Save new SHA to S3
-        if: success()
+      - name: Save BEFORE_REF to S3 on failure
+        if: failure()
         run: |
-          echo "${{ github.sha }}" > last_successful_sha.txt
-          aws s3 cp last_successful_sha.txt s3://everbeat-github/changelog/last_successful_sha.txt
+          echo "${{ github.event.before }}" > last_failed_before_ref.txt
+          aws s3 cp last_failed_before_ref.txt s3://everbeat-github/changelog/${{ github.ref }}/last_failed_before_ref.txt
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_S3_ACCESS_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_S3_SECRET_ACCESS_KEY }}
