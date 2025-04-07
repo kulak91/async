@@ -45,12 +45,22 @@ jobs:
         env:
           CHANGELOG: ${{ env.CHANGELOG }}
 
-      - name: Save last successful SHA
-        if: success()
-        run: echo "${{ github.sha }}" > last_successful_sha.txt
+      # - name: Save last successful SHA
+      #   if: success()
+      #   run: echo "${{ github.sha }}" > last_successful_sha.txt
 
-      - name: Upload last successful SHA
-        if: success()
+      # - name: Upload last successful SHA
+      #   if: success()
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: last-successful-sha
+      #     path: last_successful_sha.txt
+
+      - name: SAVE SHA FOR TESTING
+        run: |
+          echo "${{ github.sha }}" > last_successful_sha.txt
+
+      - name: UPLOAD SHA ARTIFACT
         uses: actions/upload-artifact@v4
         with:
           name: last-successful-sha
