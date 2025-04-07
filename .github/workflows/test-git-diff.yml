@@ -1,0 +1,29 @@
+name: Git Diff
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+      - dev
+      - buffer
+
+jobs:
+  get-diff:
+    name: Get Git Diff
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get Latest Changes
+        env:
+          BEFORE_REF: ${{ github.event.before }}
+          AFTER_REF: ${{ github.event.after }}
+        run: |
+          git log --pretty-=format:%s "$BEFORE_REF..$AFTER_REF" > commit_message.txt
+          git log --pretty=format:"%h %s" "$BEFORE_REF..$AFTER_REF"
+          git diff --name-only "$BEFORE_REF..$AFTER_REF" > changed_files.txt
+          git diff --name-only "$BEFORE_REF..$AFTER_REF"
