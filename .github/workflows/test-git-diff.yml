@@ -23,8 +23,8 @@ jobs:
           BEFORE_REF: ${{ github.event.before }}
           AFTER_REF: ${{ github.event.after }}
         run: |
-          echo "BEFORE_REF=$BEFORE_REF"
-          echo "AFTER_REF=$AFTER_REF"
-
-          echo "Commit messages:"
-          git log --pretty=format:"%s" "$BEFORE_REF..$AFTER_REF"
+          LOG=$(git log --pretty=format:"%s" "$BEFORE_REF..$AFTER_REF" | sed ':a;N;$!ba;s/\n/\\n/g')
+          echo "COMMITS=$LOG" >> $GITHUB_ENV
+      - name: Print Commits
+        run: |
+          echo "Commits: ${{ env.COMMITS }}"
