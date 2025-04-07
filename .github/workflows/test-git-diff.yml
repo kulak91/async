@@ -47,11 +47,11 @@ jobs:
         env:
           CHANGELOG: ${{ env.CHANGELOG }}
 
-      - name: Simulate failure on dev only
-        if: github.ref_name == 'dev'
-        run: |
-          echo "💥 Simulating failure on dev branch"
-          exit 1
+      # - name: Simulate failure on dev only
+      #   if: github.ref_name == 'dev'
+      #   run: |
+      #     echo "💥 Simulating failure on dev branch"
+      #     exit 1
 
 
       - name: Save BEFORE_REF to S3 on failure
