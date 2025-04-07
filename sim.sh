@@ -3,12 +3,15 @@ set -e
 
 echo "🛠  Creating test branches and commits..."
 
-# Убедись, что всё чисто
 git checkout buffer
 git pull origin buffer
 
 for i in {1..3}; do
   BRANCH_NAME="feature-test-$i"
+  echo "🧹 Deleting old remote branch $BRANCH_NAME if exists"
+  git push origin --delete $BRANCH_NAME 2>/dev/null || true
+  git branch -D $BRANCH_NAME 2>/dev/null || true
+
   echo "🔀 Creating branch $BRANCH_NAME from buffer"
   git checkout -b $BRANCH_NAME buffer
 
