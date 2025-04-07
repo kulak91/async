@@ -12,19 +12,46 @@ jobs:
   get-diff:
     name: Get Git Diff
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Get Latest Changes
+      - name: Download last successful SHA
+        uses: actions/download-artifact@v4
+        with:
+          name: last-successful-sha
+          path: .tmp
+        continue-on-error: true
+
+      - name: Calculate Changelog
+        run: |
+          LAST_SHA=$(cat .tmp/last_successful_sha.txt 2>/dev/null || git rev-list --max-parents=0 HEAD)
+          echo "LAST SUCCESSFUL SHA: $LAST_SHA"
+          echo "CURRENT COMMIT: ${{ github.sha }}"
+
+          LOG=$(git log --pretty=format:"%s" $LAST_SHA..${{ github.sha }})
+          echo -e "\n📝 CHANGELOG:\n$LOG"
+
+          echo 'CHANGELOG<<EOF' >> $GITHUB_ENV
+          echo "$LOG" >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
+
+      - name: Show Changelog
+        run: |
+          echo -e "\n🚀 CHANGELOG:\n$CHANGELOG"
         env:
-          BEFORE_REF: ${{ github.event.before }}
-          AFTER_REF: ${{ github.event.after }}
-        run: |
-          LOG=$(git log --pretty=format:"%s" "$BEFORE_REF..$AFTER_REF" | sed ':a;N;$!ba;s/\n/\\n/g')
-          echo "COMMITS=$LOG" >> $GITHUB_ENV
-      - name: Print Commits
-        run: |
-          echo "Commits: ${{ env.COMMITS }}"
+          CHANGELOG: ${{ env.CHANGELOG }}
+
+      - name: Save last successful SHA
+        if: success()
+        run: echo "${{ github.sha }}" > last_successful_sha.txt
+
+      - name: Upload last successful SHA
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: last-successful-sha
+          path: last_successful_sha.txt
