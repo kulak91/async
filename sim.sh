@@ -33,12 +33,12 @@ for i in {1..3}; do
   git branch -D $BRANCH_NAME
 done
 
-echo "💥 Simulating failed deploy"
-TIME=$(date +"%H:%M")
-echo "fail test" >> should-fail.txt
-git add should-fail.txt
-git commit -m "test(buffer): add should-fail.txt (simulate failed deploy) [$TIME]"
-git push origin buffer
+# echo "💥 Simulating failed deploy"
+# TIME=$(date +"%H:%M")
+# echo "fail test" >> should-fail.txt
+# git add should-fail.txt
+# git commit -m "test(buffer): add should-fail.txt (simulate failed deploy) [$TIME]"
+# git push origin buffer
 
 echo "🛠  Merging buffer into dev..."
 git checkout dev

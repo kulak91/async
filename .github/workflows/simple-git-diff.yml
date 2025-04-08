@@ -1,0 +1,23 @@
+name: Simple Git Diff
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+      - dev
+      - buffer
+
+jobs:
+  diff:
+    name: Simple Git Diff
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get Changelog from S3
+        uses: ./.github/actions/git-diff-s3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_S3_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_S3_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+          aws-bucket-name: everbeat-github
