@@ -40,7 +40,6 @@ jobs:
           echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
           echo "$LOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-
         env:
           BEFORE_REF: ${{ github.event.before }}
           AFTER_REF: ${{ github.event.after }}
