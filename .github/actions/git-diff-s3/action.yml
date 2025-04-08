@@ -25,11 +25,6 @@ inputs:
 
 runs:
   using: "composite"
-  env:
-    AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
-    AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
-    AWS_DEFAULT_REGION: ${{ inputs.aws-region }}
-    AWS_BUCKET_NAME: ${{ inputs.aws-bucket-name }}
   steps:
     - name: Checkout Source Code
       uses: actions/checkout@v4
@@ -40,6 +35,11 @@ runs:
       shell: bash
       run: |
         aws s3 cp s3://$AWS_BUCKET_NAME/changelog/${{ github.repository }}/${{ github.ref_name }}/${{ inputs.ref-file-name }} ${{ inputs.ref-file-name }} || true
+      env:
+        AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
+        AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
+        AWS_DEFAULT_REGION: ${{ inputs.aws-region }}
+        AWS_BUCKET_NAME: ${{ inputs.aws-bucket-name }}
 
     - name: Get Commit Messages
       shell: bash
@@ -71,9 +71,19 @@ runs:
       run: |
         echo "$BEFORE_REF" > ${{ inputs.ref-file-name }}
         aws s3 cp ${{ inputs.ref-file-name }} s3://$AWS_BUCKET_NAME/changelog/${{ github.repository }}/${{ github.ref_name }}/${{ inputs.ref-file-name }}
+      env:
+        AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
+        AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
+        AWS_DEFAULT_REGION: ${{ inputs.aws-region }}
+        AWS_BUCKET_NAME: ${{ inputs.aws-bucket-name }}
 
     - name: Delete failed BEFORE_REF from S3 on success
       if: success()
       shell: bash
       run: |
         aws s3 rm s3://$AWS_BUCKET_NAME/changelog/${{ github.repository }}/${{ github.ref_name }}/${{ inputs.ref-file-name }} || true
+      env:
+        AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
+        AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
+        AWS_DEFAULT_REGION: ${{ inputs.aws-region }}
+        AWS_BUCKET_NAME: ${{ inputs.aws-bucket-name }}

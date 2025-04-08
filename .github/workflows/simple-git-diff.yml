@@ -21,3 +21,9 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_S3_SECRET_ACCESS_KEY }}
           aws-region: us-west-2
           aws-bucket-name: everbeat-github
+
+      - name: Show external changelog
+        run: |
+          echo -e "\n🚀 CHANGELOG:\n$CHANGELOG"
+        env:
+          CHANGELOG: ${{ env.CHANGELOG }}
