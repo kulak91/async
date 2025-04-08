@@ -60,13 +60,13 @@ jobs:
       env:
         CHANGELOG: ${{ env.CHANGELOG }}
 
-    - name: Fail Build
-      run: |
-        echo "Simulating build failure"
-        exit 1
+    # - name: Fail Build
+    #   run: |
+    #     echo "Simulating build failure"
+    #     exit 1
 
   post-git-diff:
-    name: Post Job Save/Remove SHA
+    name: Post Job Save/Remove Commit SHA
     runs-on: ubuntu-latest
     needs: [git-diff, simulate-build]
     if: always()
