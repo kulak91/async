@@ -24,10 +24,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_S3_SECRET_ACCESS_KEY }}
           aws-region: us-west-2
           aws-bucket-name: everbeat-github
-      - name: Fail Job
-        run: |
-          echo "Failing the job intentionally to test the S3 upload."
-          exit 1
+      # - name: Fail Job
+      #   run: |
+      #     echo "Failing the job intentionally to test the S3 upload."
+      #     exit 1
 
       - name: Show external changelog
         run: |
