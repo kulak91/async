@@ -13,8 +13,8 @@ jobs:
     name: Git Diff
     runs-on: ubuntu-latest
     env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_S3_ACCESS_KEY }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_S3_SECRET_ACCESS_KEY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_S3_CHANGELOG_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_S3_CHANGELOG_SECRET_ACCESS_KEY }}
       AWS_DEFAULT_REGION: us-west-2
       AWS_BUCKET_NAME: everbeat-github
       REF_FILE_NAME: last_failed_before_ref.txt
@@ -71,8 +71,8 @@ jobs:
     needs: [git-diff, simulate-build]
     if: always()
     env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_S3_ACCESS_KEY }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_S3_SECRET_ACCESS_KEY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_S3_CHANGELOG_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_S3_CHANGELOG_SECRET_ACCESS_KEY }}
       AWS_DEFAULT_REGION: us-west-2
       AWS_BUCKET_NAME: everbeat-github
       REF_FILE_NAME: last_failed_before_ref.txt
