@@ -107,7 +107,9 @@ jobs:
               - type: "section"
                 text:
                   type: "mrkdwn"
-                  text: "Changelog: ${{ env.CHANGELOG }}"
+                  text: |
+                  *Changelog:*
+                  ```\n${{ env.CHANGELOG }}\n```
 
         env:
           CHANGELOG: ${{ needs.git-diff.outputs.CHANGELOG }}
