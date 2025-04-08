@@ -102,14 +102,18 @@ jobs:
           # payload-file-path: ./.github/templates/slack-payload.json
           # payload-templated: true
           payload: |
-            text: "*GitHub Action build result*: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
-            blocks:
-              - type: "section"
-                text:
-                  type: "mrkdwn"
-                  text: |
-                  *Changelog:*
-                  ```\n${{ env.CHANGELOG }}\n```
+              {
+                "text": "*GitHub Action build result*: ${{ job.status }}",
+                "blocks": [
+                  {
+                    "type": "section",
+                    "text": {
+                      "type": "mrkdwn",
+                      "text": "*Changelog:*\n```${{ env.CHANGELOG }}```"
+                    }
+                  }
+                ]
+              }
 
         env:
           CHANGELOG: ${{ needs.git-diff.outputs.CHANGELOG }}
