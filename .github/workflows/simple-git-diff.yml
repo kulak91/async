@@ -60,10 +60,10 @@ jobs:
       env:
         CHANGELOG: ${{ env.CHANGELOG }}
 
-    # - name: Fail Build
-    #   run: |
-    #     echo "Simulating build failure"
-    #     exit 1
+    - name: Fail Build
+      run: |
+        echo "Simulating build failure"
+        exit 1
 
   post-git-diff:
     name: Post Job Save/Remove Commit SHA
@@ -80,8 +80,12 @@ jobs:
       - name: Save BEFORE_REF to S3 on failure
         if: needs.simulate-build.result == 'failure'
         run: |
-          echo "${{ github.event.before }}" > $REF_FILE_NAME
-          aws s3 cp $REF_FILE_NAME s3://$AWS_BUCKET_NAME/changelog/${{ github.repository }}/${{ github.ref_name }}/$REF_FILE_NAME
+         if ! aws s3 ls s3://$AWS_BUCKET_NAME/changelog/${{ github.repository }}/${{ github.ref_name }}/$REF_FILE_NAME > /dev/null; then
+            echo "${{ github.event.before }}" > $REF_FILE_NAME
+            aws s3 cp $REF_FILE_NAME s3://$AWS_BUCKET_NAME/changelog/${{ github.repository }}/${{ github.ref_name }}/$REF_FILE_NAME
+          else
+            echo "S3 ref already exists, skip overwriting."
+          fi
 
       - name: Delete BEFORE_REF from S3 on success
         if: needs.simulate-build.result == 'success'
