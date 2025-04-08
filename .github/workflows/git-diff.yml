@@ -20,6 +20,10 @@ on:
         required: false
         type: string
         default: "everbeat-github"
+      runner:
+        required: false
+        type: string
+        default: "ubuntu-latest"
       ref-file-name:
         required: false
         type: string
@@ -28,7 +32,7 @@ on:
 jobs:
   git-diff:
     name: Git Diff
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner }}
     env:
       AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
       AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}

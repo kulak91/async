@@ -9,28 +9,80 @@ on:
       - buffer
 
 jobs:
-  diff:
-    name: Simple Git Diff
+  git-diff:
+    name: Git Diff
     runs-on: ubuntu-latest
-
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_S3_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_S3_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: us-west-2
+      AWS_BUCKET_NAME: everbeat-github
+      REF_FILE_NAME: last_failed_before_ref.txt
+    outputs:
+      CHANGELOG: ${{ steps.get-changelog.outputs.changelog }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Get Changelog from S3
-        uses: ./.github/workflows/git-diff.yml
-        with:
-          aws-access-key-id: ${{ secrets.AWS_S3_ACCESS_KEY }}
-          aws-secret-access-key: ${{ secrets.AWS_S3_SECRET_ACCESS_KEY }}
-          aws-region: us-west-2
-          aws-bucket-name: everbeat-github
-      # - name: Fail Job
-      #   run: |
-      #     echo "Failing the job intentionally to test the S3 upload."
-      #     exit 1
 
-      - name: Show external changelog
+      - name: Download previous BEFORE_REF from S3 (if any)
         run: |
-          echo -e "\n🚀 CHANGELOG:\n$CHANGELOG"
+          aws s3 cp s3://$AWS_BUCKET_NAME/changelog/${{ github.repository }}/${{ github.ref_name }}/$REF_FILE_NAME $REF_FILE_NAME || true
+
+      - name: Get Commit Messages
+        id: get-changelog
+        run: |
+          REAL_BEFORE=$(cat $REF_FILE_NAME 2>/dev/null || echo "$BEFORE_REF")
+          echo "BEFORE: $REAL_BEFORE"
+          echo "AFTER: $AFTER_REF"
+          LOG=$(git log --pretty=format:"%s" "$REAL_BEFORE..$AFTER_REF")
+          echo "CHANGELOG=$LOG" >> $GITHUB_OUTPUT
         env:
-          CHANGELOG: ${{ env.CHANGELOG }}
+          BEFORE_REF: ${{ github.event.before }}
+          AFTER_REF: ${{ github.event.after }}
+
+  simulate-build:
+    name: Simulate Build
+    runs-on: ubuntu-latest
+    needs: git-diff
+    env:
+      CI: true
+      ENVIRONMENT_NAME: ${{ secrets.ENVIRONMENT_NAME }}
+      SLACK_URL: ${{ secrets.SLACK_URL }}
+      CHANGELOG: ${{ needs.git-diff.outputs.CHANGELOG }}
+    steps:
+    - name: Show external changelog
+      run: |
+        echo -e "\n🚀 CHANGELOG:\n$CHANGELOG"
+      env:
+        CHANGELOG: ${{ env.CHANGELOG }}
+
+    # - name: Fail Build
+    #   run: |
+    #     echo "Simulating build failure"
+    #     exit 1
+    #   env:
+
+  post-git-diff:
+    name: Post Job Save/Remove SHA
+    runs-on: ubuntu-latest
+    needs: git-diff
+    if: always()
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_S3_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_S3_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: us-west-2
+      AWS_BUCKET_NAME: everbeat-github
+      REF_FILE_NAME: last_failed_before_ref.txt
+    steps:
+      - name: Save BEFORE_REF to S3 on failure
+        if: needs.git-diff.result == 'failure'
+        run: |
+          echo "${{ github.event.before }}" > $REF_FILE_NAME
+          aws s3 cp $REF_FILE_NAME s3://$AWS_BUCKET_NAME/changelog/${{ github.repository }}/${{ github.ref_name }}/$REF_FILE_NAME
+
+      - name: Delete BEFORE_REF from S3 on success
+        if: needs.git-diff.result == 'success'
+        run: |
+          aws s3 rm s3://$AWS_BUCKET_NAME/changelog/${{ github.repository }}/${{ github.ref_name }}/$REF_FILE_NAME || true
