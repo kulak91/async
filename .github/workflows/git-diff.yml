@@ -1,0 +1,88 @@
+name: Git Diff with S3
+
+description: >
+  Calculates commit changelog between pushes using BEFORE_REF and AFTER_REF,
+  saves fallback ref to S3 on failure, and clears it on success.
+
+on:
+  workflow_call:
+    inputs:
+      aws-access-key-id:
+        required: true
+        type: string
+      aws-secret-access-key:
+        required: true
+        type: string
+      aws-region:
+        required: true
+        type: string
+      aws-bucket-name:
+        required: false
+        type: string
+        default: "everbeat-github"
+      ref-file-name:
+        required: false
+        type: string
+        default: "last_failed_before_ref.txt"
+
+jobs:
+  git-diff:
+    name: Git Diff
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
+      AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
+      AWS_DEFAULT_REGION: ${{ inputs.aws-region }}
+      AWS_BUCKET_NAME: ${{ inputs.aws-bucket-name }}
+      REF_FILE_NAME: ${{ inputs.ref-file-name }}
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download previous BEFORE_REF from S3 (if any)
+        run: |
+          aws s3 cp s3://$AWS_BUCKET_NAME/changelog/${{ github.repository }}/${{ github.ref_name }}/$REF_FILE_NAME $REF_FILE_NAME || true
+
+      - name: Get Commit Messages
+        id: get-changelog
+        run: |
+          REAL_BEFORE=$(cat $REF_FILE_NAME 2>/dev/null || echo "$BEFORE_REF")
+          echo "BEFORE: $REAL_BEFORE"
+          echo "AFTER: $AFTER_REF"
+          LOG=$(git log --pretty=format:"%s" "$REAL_BEFORE..$AFTER_REF")
+          echo "CHANGELOG<<EOF" >> $GITHUB_ENV
+          echo "$LOG" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+        env:
+          BEFORE_REF: ${{ github.event.before }}
+          AFTER_REF: ${{ github.event.after }}
+
+      - name: Show Changelog
+        run: echo -e "\n\U0001F680 CHANGELOG:\n$CHANGELOG"
+        env:
+          CHANGELOG: ${{ env.CHANGELOG }}
+
+  post-git-diff:
+    name: Post Job Save/Remove SHA
+    runs-on: ubuntu-latest
+    needs: git-diff
+    if: always()
+    env:
+      AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
+      AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
+      AWS_DEFAULT_REGION: ${{ inputs.aws-region }}
+      AWS_BUCKET_NAME: ${{ inputs.aws-bucket-name }}
+      REF_FILE_NAME: ${{ inputs.ref-file-name }}
+    steps:
+      - name: Save BEFORE_REF to S3 on failure
+        if: needs.git-diff.result == 'failure'
+        run: |
+          echo "${{ github.event.before }}" > $REF_FILE_NAME
+          aws s3 cp $REF_FILE_NAME s3://$AWS_BUCKET_NAME/changelog/${{ github.repository }}/${{ github.ref_name }}/$REF_FILE_NAME
+
+      - name: Delete BEFORE_REF from S3 on success
+        if: needs.git-diff.result == 'success'
+        run: |
+          aws s3 rm s3://$AWS_BUCKET_NAME/changelog/${{ github.repository }}/${{ github.ref_name }}/$REF_FILE_NAME || true
