@@ -1,0 +1,113 @@
+name: Simple Git Diff
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+      - dev
+      - buffer
+
+jobs:
+  git-diff:
+    name: Git Diff
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_S3_CHANGELOG_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_S3_CHANGELOG_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: us-west-2
+      AWS_BUCKET_NAME: everbeat-github
+      REF_FILE_NAME: last_failed_before_ref.txt
+    outputs:
+      CHANGELOG: ${{ steps.get-changelog.outputs.changelog }}
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download previous BEFORE_REF from S3 (if any)
+        run: |
+          aws s3 cp s3://$AWS_BUCKET_NAME/changelog/${{ github.repository }}/${{ github.ref_name }}/$REF_FILE_NAME $REF_FILE_NAME || true
+
+      - name: Get Commit Messages
+        id: get-changelog
+        run: |
+          REAL_BEFORE=$(cat $REF_FILE_NAME 2>/dev/null || echo "$BEFORE_REF")
+          echo "BEFORE: $REAL_BEFORE"
+          echo "AFTER: $AFTER_REF"
+          LOG=$(git log --pretty=format:"%s" "$REAL_BEFORE..$AFTER_REF")
+          echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+          echo "$LOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        env:
+          BEFORE_REF: ${{ github.event.before }}
+          AFTER_REF: ${{ github.event.after }}
+
+  simulate-build:
+    name: Simulate Build
+    runs-on: ubuntu-latest
+    needs: git-diff
+    env:
+      CI: true
+      ENVIRONMENT_NAME: ${{ secrets.ENVIRONMENT_NAME }}
+      SLACK_URL: ${{ secrets.SLACK_URL }}
+      CHANGELOG: ${{ needs.git-diff.outputs.CHANGELOG }}
+    steps:
+    - name: Show external changelog
+      run: |
+        echo -e "\n🚀 CHANGELOG:\n$CHANGELOG"
+      env:
+        CHANGELOG: ${{ env.CHANGELOG }}
+
+    # - name: Fail Build
+    #   run: |
+    #     echo "Simulating build failure"
+    #     exit 1
+
+  post-git-diff:
+    name: Post Job Save/Remove Commit SHA
+    runs-on: ubuntu-latest
+    needs: [git-diff, simulate-build]
+    if: always()
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_S3_CHANGELOG_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_S3_CHANGELOG_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: us-west-2
+      AWS_BUCKET_NAME: everbeat-github
+      REF_FILE_NAME: last_failed_before_ref.txt
+    steps:
+      - name: Save BEFORE_REF to S3 on failure
+        if: needs.simulate-build.result == 'failure'
+        run: |
+         if ! aws s3 ls s3://$AWS_BUCKET_NAME/changelog/${{ github.repository }}/${{ github.ref_name }}/$REF_FILE_NAME > /dev/null; then
+            echo "${{ github.event.before }}" > $REF_FILE_NAME
+            aws s3 cp $REF_FILE_NAME s3://$AWS_BUCKET_NAME/changelog/${{ github.repository }}/${{ github.ref_name }}/$REF_FILE_NAME
+          else
+            echo "S3 ref already exists, skip overwriting."
+          fi
+
+      - name: Delete BEFORE_REF from S3 on success
+        if: needs.simulate-build.result == 'success'
+        run: |
+          aws s3 rm s3://$AWS_BUCKET_NAME/changelog/${{ github.repository }}/${{ github.ref_name }}/$REF_FILE_NAME || true
+
+      - name: Send Slack Notification
+        if: needs.simulate-build.result == 'success'
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          # webhook-type: webhook-trigger
+          webhook-type: incoming-webhook
+          # payload-file-path: ./.github/templates/slack-payload.json
+          # payload-templated: true
+          payload: |
+            text: "*GitHub Action build result*: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
+            blocks:
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: "Changelog: ${{ env.CHANGELOG }}"
+
+        env:
+          CHANGELOG: ${{ needs.git-diff.outputs.CHANGELOG }}

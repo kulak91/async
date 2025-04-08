@@ -1,0 +1,89 @@
+name: Git Diff
+
+description: >
+  Calculates commit changelog between pushes using BEFORE_REF and AFTER_REF,
+  saves fallback ref to S3 on failure, and clears it on success.
+
+inputs:
+  aws-access-key-id:
+    description: "AWS access key ID"
+    required: true
+  aws-secret-access-key:
+    description: "AWS secret access key"
+    required: true
+  aws-region:
+    description: "AWS region (e.g. us-west-2)"
+    required: true
+  aws-bucket-name:
+    description: "S3 bucket name (e.g. my-bucket)"
+    required: false
+    default: "everbeat-github"
+  ref-file-name:
+    description: "Name of the fallback ref file (default: last_failed_before_ref.txt)"
+    required: false
+    default: "last_failed_before_ref.txt"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout Source Code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Download previous BEFORE_REF from S3 (if any)
+      shell: bash
+      run: |
+        aws s3 cp s3://$AWS_BUCKET_NAME/changelog/${{ github.repository }}/${{ github.ref_name }}/${{ inputs.ref-file-name }} ${{ inputs.ref-file-name }} || true
+      env:
+        AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
+        AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
+        AWS_DEFAULT_REGION: ${{ inputs.aws-region }}
+        AWS_BUCKET_NAME: ${{ inputs.aws-bucket-name }}
+
+    - name: Get Commit Messages
+      shell: bash
+      env:
+        BEFORE_REF: ${{ github.event.before }}
+        AFTER_REF: ${{ github.event.after }}
+      run: |
+        REAL_BEFORE=$(cat ${{ inputs.ref-file-name }} 2>/dev/null || echo "$BEFORE_REF")
+
+        echo "BEFORE: $REAL_BEFORE"
+        echo "AFTER: $AFTER_REF"
+
+        LOG=$(git log --pretty=format:"%s" "$REAL_BEFORE..$AFTER_REF")
+
+        echo 'CHANGELOG<<EOF' >> $GITHUB_ENV
+        echo "$LOG" >> $GITHUB_ENV
+        echo 'EOF' >> $GITHUB_ENV
+
+    - name: Show Changelog
+      shell: bash
+      run: |
+        echo -e "\n🚀 CHANGELOG:\n$CHANGELOG"
+      env:
+        CHANGELOG: ${{ env.CHANGELOG }}
+
+    - name: Save BEFORE_REF to S3 on failure
+      if: failure()
+      shell: bash
+      run: |
+        echo "$BEFORE_REF" > ${{ inputs.ref-file-name }}
+        aws s3 cp ${{ inputs.ref-file-name }} s3://$AWS_BUCKET_NAME/changelog/${{ github.repository }}/${{ github.ref_name }}/${{ inputs.ref-file-name }}
+      env:
+        AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
+        AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
+        AWS_DEFAULT_REGION: ${{ inputs.aws-region }}
+        AWS_BUCKET_NAME: ${{ inputs.aws-bucket-name }}
+
+    - name: Delete failed BEFORE_REF from S3 on success
+      if: success()
+      shell: bash
+      run: |
+        aws s3 rm s3://$AWS_BUCKET_NAME/changelog/${{ github.repository }}/${{ github.ref_name }}/${{ inputs.ref-file-name }} || true
+      env:
+        AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
+        AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
+        AWS_DEFAULT_REGION: ${{ inputs.aws-region }}
+        AWS_BUCKET_NAME: ${{ inputs.aws-bucket-name }}

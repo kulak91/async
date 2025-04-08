@@ -1,10 +1,11 @@
 name: "Pull request labeler"
 
 on:
-    pull_request:
-    push:
-      branches:
-        - never
+  workflow_dispatch:
+    # pull_request:
+    # push:
+    #   branches:
+    #     - never
 
 jobs:
   scan-pull-request-status:

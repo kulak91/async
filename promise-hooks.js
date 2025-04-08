@@ -3,6 +3,8 @@ const fs = require('fs')
 
 let indent = 0
 
+console.log('Test');
+
 module.exports = hooks.createHook({
   promiseResolve (asyncId) {
     const indentStr = ' '.repeat(indent)
