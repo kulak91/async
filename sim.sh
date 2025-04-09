@@ -38,7 +38,7 @@ done
 # echo "fail test" >> should-fail.txt
 # git add should-fail.txt
 # git commit -m "test(buffer): add should-fail.txt (simulate failed deploy) [$TIME]"
-# git push origin buffer
+git push origin buffer
 
 echo "🛠  Merging buffer into dev..."
 git checkout dev
