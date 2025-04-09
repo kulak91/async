@@ -112,6 +112,13 @@ jobs:
                     "type": "section",
                     "text": {
                       "type": "mrkdwn",
+                      "text": "*Head branch*: `${{ github.head_ref }}`\n*Base branch*: `${{ github.base_ref }}`\n*Commit message*: `${{ github.event.head_commit.message }}`\n*Commit URL*: `<${{ github.event.head_commit.url }}|${{ github.event.head_commit.id }}>`"
+                      }
+                  },
+                  {
+                    "type": "section",
+                    "text": {
+                      "type": "mrkdwn",
                       "text": "*Changelog:*\n```${{ env.CHANGELOG }}```"
                     }
                   }
