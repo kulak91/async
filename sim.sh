@@ -47,4 +47,25 @@ TIME=$(date +"%H:%M")
 git merge buffer -m "merge(buffer): merge all feature branches and test failure [$TIME]"
 git push origin dev
 
+echo "📜 Generating local changelog between last ref and HEAD..."
+
+LAST_REF_FILE="last_failed_before_ref.txt"
+CURRENT_REF=$(git rev-parse HEAD)
+
+if [ -f "$LAST_REF_FILE" ]; then
+  BEFORE_REF=$(cat "$LAST_REF_FILE")
+else
+  BEFORE_REF=$(git merge-base origin/main HEAD) # fallback
+fi
+
+CHANGELOG=$(git log --pretty=format:"%s" "$BEFORE_REF..$CURRENT_REF")
+
+# Save with preserved line breaks
+echo -e "$CHANGELOG" > changelog.txt
+echo "$CURRENT_REF" > "$LAST_REF_FILE"
+
+echo "📝 CHANGELOG written to changelog.txt:"
+cat changelog.txt
+
+
 echo "✅ Done. Now check your GitHub Actions changelog result!"
