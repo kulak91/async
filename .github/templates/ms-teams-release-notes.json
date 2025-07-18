@@ -10,7 +10,7 @@
         "body": [
           {
             "type": "TextBlock",
-            "text": "PSS Backend {{ENVIRONMENT}} release",
+            "text": "🚀 PSS Backend {{ENVIRONMENT}} release",
             "wrap": true,
             "size": "Large",
             "weight": "Bolder"
