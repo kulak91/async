@@ -23,7 +23,8 @@ for i in 1 2 3; do
 done
 
 # Пушим новую ветку
-git push origin "$NEW_BRANCH"
+# git push origin "$NEW_BRANCH"
+git push --force-with-lease origin "$NEW_BRANCH"
 
 # Создаём PR и мержим в weekly (нужен GitHub CLI)
 gh pr create --base "$BASE_BRANCH" --head "$NEW_BRANCH" --title "Auto PR to $BASE_BRANCH" --body "Generated PR"
