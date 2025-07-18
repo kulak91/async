@@ -57,8 +57,13 @@ jobs:
               echo "• #${pr_number}: ${pr_title}"
             fi
           done > pr_titles.txt
-          
+
           CHANGELOG=$(cat pr_titles.txt | sed 's/$/  \n/')
+
+          if [ -z "$CHANGELOG" ]; then
+            CHANGELOG=$(git log --pretty=format:"%s" "$REAL_BEFORE..$AFTER_REF" | sed 's/$/  \n/')
+          fi
+
           echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
           echo "$CHANGELOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
