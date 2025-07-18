@@ -11,6 +11,7 @@ git rev-parse --is-inside-work-tree > /dev/null 2>&1 || { echo "Not a git repo";
 
 # Обновим ветки
 git fetch origin
+git push --force-with-lease origin "$NEW_BRANCH"
 
 # Создаём новую ветку от weekly
 git checkout -B "$NEW_BRANCH" "origin/$BASE_BRANCH"
