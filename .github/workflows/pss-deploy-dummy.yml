@@ -89,7 +89,7 @@ jobs:
              .attachments[0].content.body[2].text = (.attachments[0].content.body[2].text | gsub("{{RELEASE_NOTES}}"; $RELEASE_NOTES))' \
             .github/templates/ms-teams-release-notes.json)
 
-          curl -X POST -H "Content-Type: application/json" -d "$MESSAGE" ${{ secrets.MS_TEAMS_WEBHOOK_URL }}
+          curl -X POST -H "Content-Type: application/json" -d "$MESSAGE" ${{ secrets.MS_TEAMS_WEBHOOK }}
 
       - name: Delete BEFORE_REF from S3 on success
         if: needs.deploy.result == 'success'
