@@ -37,16 +37,16 @@ while git ls-remote --exit-code --heads origin "$NEW_BRANCH" >/dev/null; do
 done
 
 # Обновим локальную weekly и смержим в develop
-git checkout "$TARGET_BRANCH"
-git pull origin "$TARGET_BRANCH"
-git merge origin/"$BASE_BRANCH" --no-edit
+# git checkout "$TARGET_BRANCH"
+# git pull origin "$TARGET_BRANCH"
+# git merge origin/"$BASE_BRANCH" --no-edit
 
 # Пушим в develop
-git push origin "$TARGET_BRANCH"
+# git push origin "$TARGET_BRANCH"
 
 
 git checkout "$BASE_BRANCH"
 git reset --hard origin/"$BASE_BRANCH"
 
-git checkout "$TARGET_BRANCH"
-git reset --hard origin/"$TARGET_BRANCH"
+# git checkout "$TARGET_BRANCH"
+# git reset --hard origin/"$TARGET_BRANCH"

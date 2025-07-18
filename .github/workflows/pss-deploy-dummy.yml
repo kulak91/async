@@ -77,8 +77,11 @@ jobs:
     environment:
       name: ${{ github.ref_name }}
     steps:
-    - name: Dummy Success
-      run: echo "This is a dummy step to simulate deployment."
+    - name: Dummy Fail
+      run: |
+        echo "This is a dummy step to simulate deployment failure."
+        throw new Error("Simulated deployment failure")
+      # run: echo "This is a dummy step to simulate deployment."
 
   post-git-diff:
     name: Post Job Save/Remove Commit SHA
