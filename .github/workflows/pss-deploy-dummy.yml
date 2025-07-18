@@ -81,11 +81,13 @@ jobs:
       - name: Send MS Teams notification on success
         if: needs.deploy.result == 'success'
         run: |
-          TEMPLATE=$(cat .github/templates/ms-teams-release-notes.json)
           ENVIRONMENT=${{ github.ref_name }}
           RELEASE_NOTES="${{ needs.git-diff.outputs.CHANGELOG }}"
 
-          MESSAGE=$(echo "$TEMPLATE" | sed "s/{{ENVIRONMENT}}/$ENVIRONMENT/g" | sed "s/{{RELEASE_NOTES}}/$RELEASE_NOTES/g")
+          MESSAGE=$(jq --arg ENVIRONMENT "$ENVIRONMENT" --arg RELEASE_NOTES "$RELEASE_NOTES" \
+            '.attachments[0].content.body[0].text = (.attachments[0].content.body[0].text | gsub("{{ENVIRONMENT}}"; $ENVIRONMENT)) |
+             .attachments[0].content.body[2].text = (.attachments[0].content.body[2].text | gsub("{{RELEASE_NOTES}}"; $RELEASE_NOTES))' \
+            .github/templates/ms-teams-release-notes.json)
 
           curl -X POST -H "Content-Type: application/json" -d "$MESSAGE" ${{ secrets.MS_TEAMS_WEBHOOK_URL }}
 
