@@ -16,9 +16,9 @@ jobs:
       name: ${{ inputs.environment || github.ref_name }}
 
     steps:
-      - name: Dummy OK
-        run: echo "This is a dummy step to simulate task restart."
-      # - name: Restart Tasks
-      #   run: |
-      #     echo "${{ secrets.AWS_PSS2_SSH }}" > private_key && chmod 600 private_key
-      #     ssh -o StrictHostKeyChecking=no -i private_key ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} '"./deploy.sh"'
+      - name: Deploy Tasks via SSH
+        run: |
+          echo "SURE!"
+# echo "${{ secrets.AWS_PSS2_SSH }}" > private_key
+# chmod 600 private_key
+# ssh -o StrictHostKeyChecking=no -i private_key ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} './deploy.sh'
