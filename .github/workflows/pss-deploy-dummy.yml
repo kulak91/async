@@ -33,14 +33,22 @@ jobs:
       - name: Get Commit Messages
         id: get-changelog
         run: |
-          REAL_BEFORE=$(cat $REF_FILE_NAME 2>/dev/null || echo "$BEFORE_REF")
-          echo "BEFORE: $REAL_BEFORE"
+          if [ -f "$REF_FILE_NAME" ]; then
+            REAL_BEFORE=$(cat "$REF_FILE_NAME")
+            echo "Using failed deploy ref: $REAL_BEFORE"
+          else
+            REAL_BEFORE=$(git log --merges --pretty=format:"%H" -1)
+            echo "No failed ref — using last merge: $REAL_BEFORE"
+          fi
+
           echo "AFTER: $AFTER_REF"
-          # Get only commits since the last merge commit
+
           LOG=$(git log --no-merges --pretty=format:"%s" "$REAL_BEFORE..$AFTER_REF" | sed 's/$/  \n/')
+
           echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
           echo "$LOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+
         env:
           BEFORE_REF: ${{ github.event.before }}
           AFTER_REF: ${{ github.event.after }}
