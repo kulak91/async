@@ -1,0 +1,104 @@
+name: 'Deploy Application'
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+      - test
+      - weekly
+
+jobs:
+  git-diff:
+    runs-on: ${{ vars.ACTION_RUNNER }}
+    name: Git Diff
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_S3_CHANGELOG_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_S3_CHANGELOG_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+      AWS_BUCKET_NAME: ${{ secrets.AWS_S3_CHANGELOG_BUCKET }}
+      REF_FILE_NAME: last_failed_before_ref.txt
+    outputs:
+      CHANGELOG: ${{ steps.get-changelog.outputs.changelog }}
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download previous BEFORE_REF from S3 (if any)
+        run: |
+          aws s3 cp s3://$AWS_BUCKET_NAME/${{ github.repository }}/${{ github.ref_name }}/$REF_FILE_NAME $REF_FILE_NAME || true
+
+      - name: Get Commit Messages
+        id: get-changelog
+        run: |
+          REAL_BEFORE=$(cat $REF_FILE_NAME 2>/dev/null || echo "$BEFORE_REF")
+          echo "BEFORE: $REAL_BEFORE"
+          echo "AFTER: $AFTER_REF"
+          LOG=$(git log --pretty=format:"%s" "$REAL_BEFORE..$AFTER_REF" | sed 's/$/  \\n/' | tr -d '\n')
+          echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+          echo "$LOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        env:
+          BEFORE_REF: ${{ github.event.before }}
+          AFTER_REF: ${{ github.event.after }}
+
+  deploy:
+    runs-on: ${{ vars.ACTION_RUNNER }}
+    environment:
+      name: ${{ github.ref_name }}
+    steps:
+    - name: Dummy Success
+      run: echo "This is a dummy step to simulate deployment."
+
+  post-git-diff:
+    name: Post Job Save/Remove Commit SHA
+    runs-on: ${{ vars.ACTION_RUNNER }}
+    needs: [git-diff, deploy]
+    if: always()
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_S3_CHANGELOG_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_S3_CHANGELOG_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION}}
+      AWS_BUCKET_NAME: ${{ secrets.AWS_S3_CHANGELOG_BUCKET }}
+      REF_FILE_NAME: last_failed_before_ref.txt
+    steps:
+      - name: Save BEFORE_REF to S3 on failure
+        if: needs.deploy.result == 'failure'
+        run: |
+          if ! aws s3 ls s3://$AWS_BUCKET_NAME/${{ github.repository }}/${{ github.ref_name }}/$REF_FILE_NAME > /dev/null; then
+            echo "${{ github.event.before }}" > $REF_FILE_NAME
+            aws s3 cp $REF_FILE_NAME s3://$AWS_BUCKET_NAME/${{ github.repository }}/${{ github.ref_name }}/$REF_FILE_NAME
+          else
+            echo "S3 ref already exists, skip overwriting."
+          fi
+
+      - name: Checkout Source Code for Template
+        if: needs.deploy.result == 'success'
+        uses: actions/checkout@v4
+
+      - name: Send MS Teams notification on success
+        if: needs.deploy.result == 'success'
+        run: |
+          TEMPLATE=$(cat .github/templates/ms-teams-release-notes.json)
+          ENVIRONMENT=${{ github.ref_name }}
+          RELEASE_NOTES="${{ needs.git-diff.outputs.CHANGELOG }}"
+
+          MESSAGE=$(echo "$TEMPLATE" | sed "s/{{ENVIRONMENT}}/$ENVIRONMENT/g" | sed "s/{{RELEASE_NOTES}}/$RELEASE_NOTES/g")
+
+          curl -X POST -H "Content-Type: application/json" -d "$MESSAGE" ${{ secrets.MS_TEAMS_WEBHOOK_URL }}
+
+      - name: Delete BEFORE_REF from S3 on success
+        if: needs.deploy.result == 'success'
+        run: |
+          aws s3 rm s3://$AWS_BUCKET_NAME/${{ github.repository }}/${{ github.ref_name }}/$REF_FILE_NAME || true
+
+  deploy-tasks:
+    name: Deploy Tasks
+    needs: [deploy]
+    if: needs.deploy.result == 'success'
+    uses: ./.github/workflows/pss-deploy-tasks-dummy.yml
+    with:
+      environment: ${{ github.ref_name }}
+    secrets: inherit
