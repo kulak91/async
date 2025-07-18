@@ -50,3 +50,5 @@ git reset --hard origin/"$BASE_BRANCH"
 
 git checkout "$TARGET_BRANCH"
 git reset --hard origin/"$TARGET_BRANCH"
+
+git checkout "$BASE_BRANCH"
