@@ -28,11 +28,13 @@ git push --force-with-lease origin "$NEW_BRANCH"
 
 # Создаём PR и мержим в weekly (нужен GitHub CLI)
 gh pr create --base "$BASE_BRANCH" --head "$NEW_BRANCH" --title "Auto PR to $BASE_BRANCH" --body "Generated PR"
-gh pr merge --auto
+gh pr merge --merge --delete-branch --yes
 
 # Ждём мерджа (можно заменить на sleep, если нет вебхуков)
 echo "Waiting for PR to be merged..."
-while ! git ls-remote --exit-code --heads origin "$NEW_BRANCH" > /dev/null; do sleep 1; done
+while git ls-remote --exit-code --heads origin "$NEW_BRANCH" >/dev/null; do
+  sleep 5
+done
 
 # Обновим локальную weekly и смержим в develop
 git checkout "$TARGET_BRANCH"
