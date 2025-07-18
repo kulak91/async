@@ -37,14 +37,14 @@ jobs:
           echo "BEFORE: $REAL_BEFORE"
           echo "AFTER: $AFTER_REF"
           LOG=$(git log --pretty=format:"%s" "$REAL_BEFORE..$AFTER_REF" | grep -E '^Merge pull request')
-          # LOG=$(git log --pretty=format:"%s" "$REAL_BEFORE..$AFTER_REF" | sed 's/$/  \\n/' | tr -d '\n')
           echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
           echo "$LOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-        env:
-          BEFORE_REF: ${{ github.event.before }}
-          AFTER_REF: ${{ github.event.after }}
+          env:
+            BEFORE_REF: ${{ github.event.before }}
+            AFTER_REF: ${{ github.event.after }}
 
+    # LOG=$(git log --pretty=format:"%s" "$REAL_BEFORE..$AFTER_REF" | sed 's/$/  \\n/' | tr -d '\n')
   deploy:
     runs-on: ${{ vars.ACTION_RUNNER }}
     environment:
