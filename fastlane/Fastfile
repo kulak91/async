@@ -1,27 +1,30 @@
-# This file contains the fastlane.tools configuration
-# You can find the documentation at https://docs.fastlane.tools
-#
-# For a list of all available actions, check out
-#
-#     https://docs.fastlane.tools/actions
-#
-# For a list of all available plugins, check out
-#
-#     https://docs.fastlane.tools/plugins/available-plugins
-#
-
-# Uncomment the line if you want fastlane to automatically update itself
-# update_fastlane
-
-default_platform(:ios)
+fastlane_require 'json'
 
 platform :ios do
-  desc "Description of what the lane does"
-  lane :custom_lane do
-        add_badge(
-        shield: "#{'test'}-#{(24 + 1)}-orange",
-        # custom: "../src/assets/images/deployment/#{file_name}.png"
-      )
-    # add actions here: https://docs.fastlane.tools/actions
+  desc "Test Slack thread message and file upload"
+  lane :test_slack_upload do
+    # Путь до любого файла для теста (можно .txt)
+    test_file_path = "../readme.md" # или любой другой существующий файл
+
+    # Отправляем сообщение
+    slack_response = slack(
+      channel: "#bot-test",
+      slack_url: "https://hooks.slack.com/services/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",
+      message: "🧪 Лол кек от Fastlane",
+      success: true,
+      default_payloads: []
+    )
+
+    # Берем ts и channel из JSON ответа
+    ts = slack_response[:json]["ts"]
+    channel = slack_response[:json]["channel"]
+
+    # Прикрепляем файл в тред
+    Actions::Slack.actions_client.files_upload(
+      channels: channel,
+      thread_ts: ts,
+      initial_comment: "📎 Приложенный файл",
+      file: Faraday::UploadIO.new(test_file_path, 'text/plain')
+    )
   end
 end
