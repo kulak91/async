@@ -1,5 +1,5 @@
 name: 'Deploy Application'
-
+#  LOG=$(git log --pretty=format:"%s" "$REAL_BEFORE..$AFTER_REF" | sed 's/$/  \\n/' | tr -d '\n')
 on:
   workflow_dispatch:
   push:
@@ -40,11 +40,10 @@ jobs:
           echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
           echo "$LOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-          env:
-            BEFORE_REF: ${{ github.event.before }}
-            AFTER_REF: ${{ github.event.after }}
+        env:
+          BEFORE_REF: ${{ github.event.before }}
+          AFTER_REF: ${{ github.event.after }}
 
-    # LOG=$(git log --pretty=format:"%s" "$REAL_BEFORE..$AFTER_REF" | sed 's/$/  \\n/' | tr -d '\n')
   deploy:
     runs-on: ${{ vars.ACTION_RUNNER }}
     environment:
