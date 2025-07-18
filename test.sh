@@ -27,7 +27,7 @@ done
 git push --force origin "$NEW_BRANCH"
 
 # Создаём PR и мержим в weekly (нужен GitHub CLI)
-gh pr create --base "$BASE_BRANCH" --head "$NEW_BRANCH" --title "Auto PR to $BASE_BRANCH" --body "Generated PR"
+gh pr create --base "$BASE_BRANCH" --head "$NEW_BRANCH" --title "[#1234] Auto PR to $BASE_BRANCH" --body "Generated PR"
 gh pr merge --merge --delete-branch
 
 # Ждём мерджа (можно заменить на sleep, если нет вебхуков)
