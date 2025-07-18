@@ -78,18 +78,34 @@ jobs:
         if: needs.deploy.result == 'success'
         uses: actions/checkout@v4
 
+      # - name: Send MS Teams notification on success
+      #   if: needs.deploy.result == 'success'
+      #   run: |
+      #     ENVIRONMENT=${{ github.ref_name }}
+      #     RELEASE_NOTES="${{ needs.git-diff.outputs.CHANGELOG }}"
+
+      #     MESSAGE=$(jq --arg ENVIRONMENT "$ENVIRONMENT" --arg RELEASE_NOTES "$RELEASE_NOTES" \
+      #       '.attachments[0].content.body[0].text = (.attachments[0].content.body[0].text | gsub("{{ENVIRONMENT}}"; $ENVIRONMENT)) |
+      #        .attachments[0].content.body[2].text = (.attachments[0].content.body[2].text | gsub("{{RELEASE_NOTES}}"; $RELEASE_NOTES))' \
+      #       .github/templates/ms-teams-release-notes.json)
+
+      #     curl -X POST -H "Content-Type: application/json" -d "$MESSAGE" ${{ secrets.MS_TEAMS_WEBHOOK }}
       - name: Send MS Teams notification on success
         if: needs.deploy.result == 'success'
         run: |
-          ENVIRONMENT=${{ github.ref_name }}
+          ENVIRONMENT="${{ github.ref_name }}"
           RELEASE_NOTES="${{ needs.git-diff.outputs.CHANGELOG }}"
 
-          MESSAGE=$(jq --arg ENVIRONMENT "$ENVIRONMENT" --arg RELEASE_NOTES "$RELEASE_NOTES" \
-            '.attachments[0].content.body[0].text = (.attachments[0].content.body[0].text | gsub("{{ENVIRONMENT}}"; $ENVIRONMENT)) |
-             .attachments[0].content.body[2].text = (.attachments[0].content.body[2].text | gsub("{{RELEASE_NOTES}}"; $RELEASE_NOTES))' \
-            .github/templates/ms-teams-release-notes.json)
+          jq \
+            --arg env "$ENVIRONMENT" \
+            --arg notes "$RELEASE_NOTES" \
+            '
+            (.attachments[0].content.body[] | select(.text | test("\\{\\{ENVIRONMENT\\}\\}")))   .text |= gsub("\\{\\{ENVIRONMENT\\}\\}"; $env) |
+            (.attachments[0].content.body[] | select(.text | test("\\{\\{RELEASE_NOTES\\}\\}"))) .text |= gsub("\\{\\{RELEASE_NOTES\\}\\}"; $notes)
+            ' .github/templates/ms-teams-release-notes.json > message.json
 
-          curl -X POST -H "Content-Type: application/json" -d "$MESSAGE" ${{ secrets.MS_TEAMS_WEBHOOK }}
+          curl -X POST -H "Content-Type: application/json" --data @message.json "${{ secrets.MS_TEAMS_WEBHOOK }}"
+
 
       - name: Delete BEFORE_REF from S3 on success
         if: needs.deploy.result == 'success'
