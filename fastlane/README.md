@@ -15,13 +15,13 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 ## iOS
 
-### ios custom_lane
+### ios test_slack_upload
 
 ```sh
-[bundle exec] fastlane ios custom_lane
+[bundle exec] fastlane ios test_slack_upload
 ```
 
-Description of what the lane does
+Test Slack thread message and file upload
 
 ----
 
