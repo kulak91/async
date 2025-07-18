@@ -105,9 +105,13 @@ jobs:
             echo "S3 ref already exists, skip overwriting."
           fi
 
-      - name: Checkout Source Code for Template
+      - name: Checkout MS Teams Template
         if: needs.deploy.result == 'success'
         uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/templates/ms-teams-release-notes.json
+          sparse-checkout-cone-mode: false
 
       - name: Send MS Teams notification on success
         if: needs.deploy.result == 'success'
