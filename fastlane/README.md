@@ -15,18 +15,19 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 ## iOS
 
-### ios custom_lane
+### ios test_slack_upload
 
 ```sh
-[bundle exec] fastlane ios custom_lane
+[bundle exec] fastlane ios test_slack_upload
 ```
 
-Description of what the lane does
+Test Slack thread message and file upload
 
 ----
 
 This README.md is auto-generated and will be re-generated every time [_fastlane_](https://fastlane.tools) is run.
 
 More information about _fastlane_ can be found on [fastlane.tools](https://fastlane.tools).
+
 
 The documentation of _fastlane_ can be found on [docs.fastlane.tools](https://docs.fastlane.tools).

@@ -1,9 +1,9 @@
 source 'https://rubygems.org'
 
 # You may use http://rbenv.org/ or https://rvm.io/ to install and use this version
-ruby ">= 2.6.10"
+ruby "3.4.1"
 
-gem 'cocoapods', '1.15.2'
+gem 'cocoapods', '1.16.2'
 gem 'activesupport', '>= 6.1.7.3', '< 7.1.0'
 gem "fastlane"
 plugins_path = File.join(File.dirname(__FILE__), 'fastlane', 'Pluginfile')

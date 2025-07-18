@@ -1,0 +1,34 @@
+{
+  "type": "message",
+  "attachments": [
+    {
+      "contentType": "application/vnd.microsoft.card.adaptive",
+      "content": {
+        "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+        "type": "AdaptiveCard",
+        "version": "1.3",
+        "body": [
+          {
+            "type": "TextBlock",
+            "text": "PSS Backend {{ENVIRONMENT}} release",
+            "wrap": true,
+            "size": "Large",
+            "weight": "Bolder"
+          },
+          {
+            "type": "TextBlock",
+            "text": "**Changelog**",
+            "wrap": true,
+            "weight": "Bolder",
+            "spacing": "Medium"
+          },
+          {
+            "type": "TextBlock",
+            "text": "{{RELEASE_NOTES}}",
+            "wrap": true
+          }
+        ]
+      }
+    }
+  ]
+}
