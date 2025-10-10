@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      pull-requests: read
     outputs:
       codex_json: ${{ steps.run_codex.outputs['final-message'] }}
     steps:
