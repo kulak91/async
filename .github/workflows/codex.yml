@@ -78,7 +78,10 @@ jobs:
         with:
           github-token: ${{ github.token }}
           script: |
-            const core = require('@actions/core');
+            const warn = (msg) =>
+              (typeof core !== 'undefined' && core?.warning)
+                ? warn(msg)
+                : console.warn(msg);
             const prNumber = context.payload.pull_request.number;
             const headSha = context.payload.pull_request.head.sha;
 
@@ -145,10 +148,10 @@ jobs:
                     }
                     // Skip not in diff
                     if (String(err?.message || '').includes('position') || String(err?.message || '').includes('line must be part of the diff')) {
-                      core.warning(`Skip ${c.path}:${c.line} — not in diff`);
+                      warn(`Skip ${c.path}:${c.line} — not in diff`);
                       break;
                     }
-                    core.warning(`Failed ${c.path}:${c.line}: ${err?.message || err}`);
+                    warn(`Failed ${c.path}:${c.line}: ${err?.message || err}`);
                     break;
                   }
                 }
