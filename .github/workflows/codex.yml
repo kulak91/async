@@ -4,6 +4,10 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   codex:
     runs-on: ubuntu-latest
@@ -80,7 +84,7 @@ jobs:
           script: |
             const warn = (msg) =>
               (typeof core !== 'undefined' && core?.warning)
-                ? warn(msg)
+                ? core.warning(msg)
                 : console.warn(msg);
             const prNumber = context.payload.pull_request.number;
             const headSha = context.payload.pull_request.head.sha;
