@@ -1,0 +1,164 @@
+name: Codex PR Review (inline)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  codex:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      codex_json: ${{ steps.run_codex.outputs['final-message'] }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+
+      - name: Pre-fetch base and head refs for the PR
+        run: |
+          git fetch --no-tags origin \
+            ${{ github.event.pull_request.base.ref }} \
+            +refs/pull/${{ github.event.pull_request.number }}/head
+
+      - name: Run Codex
+        id: run_codex
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          prompt: |
+            This is PR #${{ github.event.pull_request.number }} for ${{ github.repository }}.
+            Base SHA: ${{ github.event.pull_request.base.sha }}
+            Head SHA: ${{ github.event.pull_request.head.sha }}
+
+            Review ONLY the diff introduced by this PR. Be concise and specific.
+            Produce STRICT MINIFIED JSON (no backticks, no code fences, no extra text):
+            {
+              "summary": "one-paragraph summary of key findings",
+              "comments": [
+                {
+                  "path": "relative/path/from/repo/root.ext",
+                  "line": 123,               // line number on HEAD (new) side
+                  "title": "Short label",     // optional
+                  "body": "Clear, actionable feedback. Include suggestion/fix if possible."
+                }
+              ]
+            }
+
+            Rules:
+            - "comments" should reference only lines that exist in the PR's head (RIGHT) side.
+            - Omit entries you cannot confidently map to a concrete file/line.
+            - Keep JSON valid and minified (no newlines beyond JSON needs).
+
+  post_feedback:
+    runs-on: ubuntu-latest
+    needs: codex
+    if: needs.codex.outputs.codex_json != ''
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - name: Parse Codex JSON
+        id: parse
+        env:
+          CODEX_JSON: ${{ needs.codex.outputs.codex_json }}
+        run: |
+          set -e
+          echo "$CODEX_JSON" | jq -e . >/dev/null
+          echo "summary=$(echo "$CODEX_JSON" | jq -r '.summary // ""')" >> "$GITHUB_OUTPUT"
+          echo "comments=$(echo "$CODEX_JSON" | jq -c '.comments // []')" >> "$GITHUB_OUTPUT"
+
+      - name: Post inline review comments (chunked)
+        uses: actions/github-script@v7
+        env:
+          COMMENTS_JSON: ${{ steps.parse.outputs.comments }}
+          SUMMARY_TEXT: ${{ steps.parse.outputs.summary }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const warn = (msg) =>
+              (typeof core !== 'undefined' && core?.warning)
+                ? core.warning(msg)
+                : console.warn(msg);
+            const prNumber = context.payload.pull_request.number;
+            const headSha = context.payload.pull_request.head.sha;
+
+            const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+            const chunk = (arr, size) => {
+              const out = [];
+              for (let i=0;i<arr.length;i+=size) out.push(arr.slice(i, i+size));
+              return out;
+            };
+
+            const summary = (process.env.SUMMARY_TEXT || "").trim();
+            if (summary) {
+              await github.rest.pulls.createReview({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber,
+                event: "COMMENT",
+                body: `Codex summary:\n\n${summary}`
+              });
+            }
+
+            let comments = [];
+            try {
+              comments = JSON.parse(process.env.COMMENTS_JSON || "[]");
+            } catch { comments = []; }
+
+            const TOTAL_MAX = 300;
+            comments = comments.slice(0, TOTAL_MAX);
+
+            const CHUNK_SIZE = 25;
+            const PAUSE_BETWEEN_CHUNKS_MS = 2500; // 2.5s delay
+            const chunks = chunk(comments, CHUNK_SIZE);
+
+            for (const group of chunks) {
+              for (const c of group) {
+                if (!c?.path || !Number.isInteger(c.line) || c.line <= 0) continue;
+                const title = c.title ? `**${c.title}**\n\n` : "";
+                const body = `${title}${c.body || ""}`.trim();
+                if (!body) continue;
+
+                // Retry on 403 abuse / rate-limit
+                let attempts = 0;
+                while (attempts < 3) {
+                  try {
+                    await github.rest.pulls.createReviewComment({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      pull_number: prNumber,
+                      commit_id: headSha,
+                      path: c.path,
+                      side: "RIGHT",
+                      line: c.line,
+                      body
+                    });
+                    break; // OK
+                  } catch (err) {
+                    const retryAfter = Number(err?.response?.headers?.['retry-after'] || 0);
+                    const status = err?.status || err?.response?.status;
+                    // 403 (abuse) or 429/secondary-rate — wait and retry
+                    if (status === 403 || status === 429) {
+                      await sleep((retryAfter ? retryAfter * 1000 : 3000) * (attempts + 1));
+                      attempts++;
+                      continue;
+                    }
+                    // Skip not in diff
+                    if (String(err?.message || '').includes('position') || String(err?.message || '').includes('line must be part of the diff')) {
+                      warn(`Skip ${c.path}:${c.line} — not in diff`);
+                      break;
+                    }
+                    warn(`Failed ${c.path}:${c.line}: ${err?.message || err}`);
+                    break;
+                  }
+                }
+              }
+              await sleep(PAUSE_BETWEEN_CHUNKS_MS);
+            }
