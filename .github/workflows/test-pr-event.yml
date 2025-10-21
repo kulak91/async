@@ -1,0 +1,47 @@
+name: Test PR Event Logger
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, review_requested]
+
+jobs:
+  log-event:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Log github.event object
+        run: |
+          echo "========================================="
+          echo "Full github.event object:"
+          echo "========================================="
+          echo '${{ toJSON(github.event) }}' | jq '.'
+
+      - name: Log specific PR details
+        run: |
+          echo "========================================="
+          echo "Pull Request Details:"
+          echo "========================================="
+          echo "PR Number: ${{ github.event.pull_request.number }}"
+          echo "PR Title: ${{ github.event.pull_request.title }}"
+          echo "PR State: ${{ github.event.pull_request.state }}"
+          echo "PR Action: ${{ github.event.action }}"
+          echo ""
+          echo "Base Branch: ${{ github.event.pull_request.base.ref }}"
+          echo "Base SHA: ${{ github.event.pull_request.base.sha }}"
+          echo ""
+          echo "Head Branch: ${{ github.event.pull_request.head.ref }}"
+          echo "Head SHA: ${{ github.event.pull_request.head.sha }}"
+          echo ""
+          echo "Author: ${{ github.event.pull_request.user.login }}"
+          echo "Draft: ${{ github.event.pull_request.draft }}"
+          echo "Mergeable: ${{ github.event.pull_request.mergeable }}"
+          echo "Merged: ${{ github.event.pull_request.merged }}"
+
+      - name: Log all available github context
+        run: |
+          echo "========================================="
+          echo "Full github context:"
+          echo "========================================="
+          echo '${{ toJSON(github) }}' | jq '.'
