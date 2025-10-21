@@ -2,7 +2,7 @@ name: Codex PR Review (inline)
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, review_requested, reopened]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -10,6 +10,7 @@ concurrency:
 
 jobs:
   codex:
+    if: ${{ !contains(fromJSON('["develop","weekly","main"]'), github.head_ref) || (github.event.action == 'review_requested' && github.event.requested_reviewer && github.event.requested_reviewer.login == 'Copilot') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
